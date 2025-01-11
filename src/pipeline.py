@@ -1,14 +1,20 @@
 
 import os
 import requests
-import json
+import psycopg2
 from datetime import datetime
 from dotenv import load_dotenv
 
-# Load ambient variables from .env
+# Load environment variables from .env
 load_dotenv()
 
+# Environment variables
 API_KEY = os.getenv('API_KEY')
+DB_HOST = os.getenv('DB_HOST')
+DB_NAME = os.getenv('DB_NAME')
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASS')
+
 
 def extract_city_weather_data(city: str, api_key: str) -> dict:
     '''
@@ -51,6 +57,7 @@ def transform_city_weather_data(data: dict) -> dict:
     dict: Transformed weather data
 	'''
     transformed_weather_data = {
+        'timestamp': datetime.fromtimestamp(data['dt']).strftime('%Y-%m-%d %H:%M:%S'),
         'city': data['name'],
         'temperature': round(data['main']['temp'] - 273.15, 2),
         'feels_like_temp': round(data['main']['feels_like'] - 273.15, 2),
@@ -58,45 +65,78 @@ def transform_city_weather_data(data: dict) -> dict:
         'wind_speed': data['wind']['speed'],
         'description': data['weather'][0]['description'],
         'longitude': data['coord']['lon'],
-        'latitude': data['coord']['lat'],
-        'timestamp': datetime.fromtimestamp(data['dt']).strftime('%Y-%m-%d %H:%M:%S')
+        'latitude': data['coord']['lat']
 	}
     
     return transformed_weather_data
 
-# def load_weather_data_on_postgres(data: dict):
-     
+def database_connection():
+    return psycopg2.connect(
+        host=DB_HOST,
+        database=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD
+    )
+
+def init_database():
+    conn = None
+    try:
+        conn = database_connection()
+        cur = conn.cursor()
+
+        with open('schema.sql', 'r') as f:
+            cur.execute(f.read())
+
+        conn.commit()
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as e:
+        print(f'Error while initializing database: {e}')
+    finally:
+        if conn is not None:
+            conn.close()
+
+        
+
+def load_weather_data_on_database(data: dict):
+    '''
+    Load the transformed weather data into the
+    connected database
+    
+    Parameters:
+    data (dict): Transformed weather data
+	'''
+    sql_insert_query = """
+        INSERT INTO weather_capitals
+        (timestamp, city, temperature, feels_like_temp, 
+        humidity, wind_speed, description, longitude, latitude)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    conn = None
+    try:
+        conn = database_connection()
+        cur = conn.cursor()
+        cur.execute(sql_insert_query, (
+            data['timestamp'],
+            data['city'],
+            data['temperature'],
+            data['feels_like_temp'],
+            data['humidity'],
+            data['wind_speed'],
+            data['description'],
+            data['longitude'],
+            data['latitude']
+        ))
+        conn.commit()
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as e:
+        print(f'Error while inserting data: {e}')
+    finally:
+        if conn is not None:
+            conn.close()
+
     
 if __name__ == '__main__':
-		
-	data = extract_city_weather_data('Manaus', API_KEY)
-	# print(data)
-	transformed_data = transform_city_weather_data(data)
-	print(transformed_data)
-
-# {
-#     'coord': {
-#         'lon': -46.6361, 'lat': -23.5475
-#         }, 
-#     'weather': [{
-#         'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '01d'
-#         }], 
-#     'base': 'stations', 
-#     'main': {
-#         'temp': 297.64, 'feels_like': 297.63, 'temp_min': 296.9, 'temp_max': 298.4, 'pressure': 1011, 'humidity': 57, 'sea_level': 1011, 'grnd_level': 923
-#         }, 
-#     'visibility': 10000, 
-#     'wind': {
-#         'speed': 2.24, 'deg': 285, 'gust': 2.24
-#         }, 
-#     'clouds': {
-#         'all': 0
-#         }, 
-#     'dt': 1736606255, 
-#     'sys': {
-#         'type': 1, 'id': 8394, 'country': 'BR', 'sunrise': 1736584218, 'sunset': 1736632701
-#         }, 
-#     'timezone': -10800, 
-#     'id': 3448439, 
-#     'name': 'São Paulo', 
-#     'cod': 200}
+    init_database()
+    data = extract_city_weather_data('Manaus', API_KEY)
+    transformed_data = transform_city_weather_data(data)
+    load_weather_data_on_database(transformed_data)
