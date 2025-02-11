@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS weather_capitals (
     humidity NUMERIC (3,0),
     wind_speed NUMERIC (5,2),
     description VARCHAR(100),
-    longitude NUMERIC (5,2),
-    latitude NUMERIC (5,2),
+    icon_url VARCHAR(100),
+    longitude NUMERIC (8,6),
+    latitude NUMERIC (8,6),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

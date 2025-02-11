@@ -1,39 +1,49 @@
-version: '3.8'
 services:
   db:
+    container_name: postgres 
     image: postgres:latest
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: weather_user
-      POSTGRES_PASSWORD: weather_pass
-      POSTGRES_DB: weather_db
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_HOST_AUTH_METHOD=md5
+      - POSTGRES_INITDB_ARGS=--auth-host=md5
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: user@domain.com
-      PGADMIN_DEFAULT_PASSWORD: adminpassword
-    ports:
-      - "8080:80"
-    depends_on:
-      - db
-  
-  app:
+      - "5433:5432"
+    networks:
+      - weather_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    
+  etl-pipeline:
     build: .
-    ports:
-      - "8501:8501"
+    env_file:
+      - .env
     environment:
-      DB_HOST: db
-      DB_NAME: mydatabase
-      DB_USER: myuser
-      DB_PASS: mypassword
+      - API_KEY=${API_KEY}
+      - DB_HOST=postgres
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+    ports:
+      - "8001:8001"
+    networks:
+      - weather_network
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    command: ["python", "src/main.py"]
 
 volumes:
   postgres_data:
+
+networks:
+  weather_network:
+    driver: bridge

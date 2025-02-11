@@ -1,12 +1,12 @@
-
 import os
 import requests
 import psycopg2
 from datetime import datetime
+from utils_log import log_decorator
 from dotenv import load_dotenv
 
 # Load environment variables from .env
-load_dotenv()
+load_dotenv(override=True)
 
 # Environment variables
 API_KEY = os.getenv('API_KEY')
@@ -15,7 +15,7 @@ DB_NAME = os.getenv('DB_NAME')
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASS')
 
-
+@log_decorator
 def extract_city_weather_data(city: str, api_key: str) -> dict:
     '''
     Fetch raw weather data for a chosen city using OpenWeather API
@@ -43,7 +43,8 @@ def extract_city_weather_data(city: str, api_key: str) -> dict:
         
     except requests.exceptions.RequestException as e:
         print(f'Error fetching data: {e}')
-        
+
+@log_decorator  
 def transform_city_weather_data(data: dict) -> dict:
     '''
     Transform raw data into a more organized dictionary,
@@ -57,19 +58,21 @@ def transform_city_weather_data(data: dict) -> dict:
     dict: Transformed weather data
 	'''
     transformed_weather_data = {
-        'timestamp': datetime.fromtimestamp(data['dt']).strftime('%Y-%m-%d %H:%M:%S'),
+        'timestamp': datetime.fromtimestamp((data['dt'] + data['timezone'])).strftime('%Y-%m-%d %H:%M:%S'),
         'city': data['name'],
         'temperature': round(data['main']['temp'] - 273.15, 2),
         'feels_like_temp': round(data['main']['feels_like'] - 273.15, 2),
         'humidity': data['main']['humidity'],
         'wind_speed': data['wind']['speed'],
         'description': data['weather'][0]['description'],
+        'icon_url': f"https://openweathermap.org/img/wn/{data['weather'][0]['icon']}@2x.png",
         'longitude': data['coord']['lon'],
         'latitude': data['coord']['lat']
 	}
     
     return transformed_weather_data
 
+@log_decorator
 def database_connection():
     return psycopg2.connect(
         host=DB_HOST,
@@ -78,6 +81,7 @@ def database_connection():
         password=DB_PASSWORD
     )
 
+@log_decorator
 def init_database():
     conn = None
     try:
@@ -93,10 +97,9 @@ def init_database():
         print(f'Error while initializing database: {e}')
     finally:
         if conn is not None:
-            conn.close()
+            conn.close()   
 
-        
-
+@log_decorator
 def load_weather_data_on_database(data: dict):
     '''
     Load the transformed weather data into the
@@ -107,9 +110,9 @@ def load_weather_data_on_database(data: dict):
 	'''
     sql_insert_query = """
         INSERT INTO weather_capitals
-        (timestamp, city, temperature, feels_like_temp, 
-        humidity, wind_speed, description, longitude, latitude)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        (timestamp, city, temperature, feels_like_temp, humidity, wind_speed,
+        description, icon_url, longitude, latitude)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
     conn = None
     try:
@@ -123,6 +126,7 @@ def load_weather_data_on_database(data: dict):
             data['humidity'],
             data['wind_speed'],
             data['description'],
+            data['icon_url'],
             data['longitude'],
             data['latitude']
         ))
@@ -134,9 +138,10 @@ def load_weather_data_on_database(data: dict):
         if conn is not None:
             conn.close()
 
-    
+
 if __name__ == '__main__':
-    init_database()
-    data = extract_city_weather_data('Manaus', API_KEY)
-    transformed_data = transform_city_weather_data(data)
-    load_weather_data_on_database(transformed_data)
+    # init_database()
+    # data = extract_city_weather_data('Manaus', API_KEY)
+    # transformed_data = transform_city_weather_data(data)
+    # load_weather_data_on_database(transformed_data)
+    pass
