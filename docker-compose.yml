@@ -28,7 +28,7 @@ services:
       - .env
     environment:
       - API_KEY=${API_KEY}
-      - DB_HOST=postgres
+      - DB_HOST=${DB_HOST}
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
@@ -40,6 +40,26 @@ services:
       db:
         condition: service_healthy
     command: ["python", "src/main.py"]
+
+  app:
+    build: .
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    environment:
+      - API_KEY=${API_KEY}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_PORT=5432
+    networks:
+      - weather_network
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["streamlit", "run", "src/app.py"]
 
 volumes:
   postgres_data:

@@ -13,7 +13,7 @@ API_KEY = os.getenv('API_KEY')
 DB_HOST = os.getenv('DB_HOST')
 DB_NAME = os.getenv('DB_NAME')
 DB_USER = os.getenv('DB_USER')
-DB_PASSWORD = os.getenv('DB_PASS')
+DB_PASS = os.getenv('DB_PASS')
 
 @log_decorator
 def extract_city_weather_data(city: str, api_key: str) -> dict:
@@ -58,7 +58,7 @@ def transform_city_weather_data(data: dict) -> dict:
     dict: Transformed weather data
 	'''
     transformed_weather_data = {
-        'timestamp': datetime.fromtimestamp((data['dt'] + data['timezone'])).strftime('%Y-%m-%d %H:%M:%S'),
+        'timestamp': datetime.fromtimestamp((data['dt'] - 10800)).strftime('%Y-%m-%d %H:%M:%S'),
         'city': data['name'],
         'temperature': round(data['main']['temp'] - 273.15, 2),
         'feels_like_temp': round(data['main']['feels_like'] - 273.15, 2),
@@ -78,7 +78,7 @@ def database_connection():
         host=DB_HOST,
         database=DB_NAME,
         user=DB_USER,
-        password=DB_PASSWORD
+        password=DB_PASS
     )
 
 @log_decorator
@@ -140,8 +140,5 @@ def load_weather_data_on_database(data: dict):
 
 
 if __name__ == '__main__':
-    # init_database()
-    # data = extract_city_weather_data('Manaus', API_KEY)
-    # transformed_data = transform_city_weather_data(data)
-    # load_weather_data_on_database(transformed_data)
+    database_connection()
     pass

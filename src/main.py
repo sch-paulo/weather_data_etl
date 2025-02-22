@@ -41,4 +41,4 @@ if __name__ == "__main__":
     while True:
         for city in brazilian_capitals:
             run_pipeline(city)
-        time.sleep(60)
+        time.sleep(300)
