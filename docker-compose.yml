@@ -24,6 +24,7 @@ services:
     
   etl-pipeline:
     build: .
+    image: etl-pipeline:latest
     env_file:
       - .env
     environment:
@@ -60,6 +61,80 @@ services:
       db:
         condition: service_healthy
     command: ["streamlit", "run", "src/app.py"]
+
+  airflow-postgres:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    networks:
+      - weather_network
+    healthcheck:  # Ensure Postgres is ready
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  airflow-init:
+    image: apache/airflow:2.8.1
+    depends_on:
+      airflow-postgres:
+        condition: service_healthy  # Wait for Postgres to be ready
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    command: 
+      - bash
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username admin \
+          --password admin \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email admin@example.com
+    networks:
+      - weather_network
+    healthcheck:  # Add healthcheck
+      test: ["CMD-SHELL", "airflow db check"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  airflow-webserver:
+    image: apache/airflow:2.8.1
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags  # Mount local DAGs directory
+      - /var/run/docker.sock:/var/run/docker.sock  # Allow Airflow to run Docker commands
+    command: airflow webserver --port 8080
+    networks:
+      - weather_network
+
+  airflow-scheduler:
+    image: apache/airflow:2.8.1
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@airflow-postgres/airflow
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: airflow scheduler
+    networks:
+      - weather_network
 
 volumes:
   postgres_data:

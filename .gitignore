@@ -1,4 +1,5 @@
 .env
 .venv/
+.qodo/
 steps_project.xlsx
 test.py
