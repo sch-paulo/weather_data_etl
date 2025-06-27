@@ -1,6 +1,8 @@
 import os
 import requests
 import psycopg2
+import json
+from google.cloud import bigquery
 from datetime import datetime
 from utils_log import log_decorator
 from dotenv import load_dotenv
@@ -9,11 +11,9 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 # Environment variables
-API_KEY = os.getenv('API_KEY')
-DB_HOST = os.getenv('DB_HOST')
-DB_NAME = os.getenv('DB_NAME')
-DB_USER = os.getenv('DB_USER')
-DB_PASS = os.getenv('DB_PASS')
+GCP_PROJECT = os.getenv('GCP_PROJECT')
+DATASET_ID = os.getenv('DATASET_ID')
+TABLE_ID = os.getenv('TABLE_ID')
 
 @log_decorator
 def extract_city_weather_data(city: str, api_key: str) -> dict:
@@ -31,7 +31,8 @@ def extract_city_weather_data(city: str, api_key: str) -> dict:
     
     params = {
         'q': city,
-        'appid': api_key
+        'appid': api_key,
+        'units': 'metric'
 	}
     
     try:
@@ -58,10 +59,10 @@ def transform_city_weather_data(data: dict) -> dict:
     dict: Transformed weather data
 	'''
     transformed_weather_data = {
-        'timestamp': datetime.fromtimestamp((data['dt'] - 10800)).strftime('%Y-%m-%d %H:%M:%S'),
+        'timestamp': datetime.fromtimestamp(data['dt']).isoformat(),
         'city': data['name'],
-        'temperature': round(data['main']['temp'] - 273.15, 2),
-        'feels_like_temp': round(data['main']['feels_like'] - 273.15, 2),
+        'temperature': round(data['main']['temp'], 2),
+        'feels_like_temp': round(data['main']['feels_like'], 2),
         'humidity': data['main']['humidity'],
         'wind_speed': data['wind']['speed'],
         'description': data['weather'][0]['description'],
@@ -73,72 +74,80 @@ def transform_city_weather_data(data: dict) -> dict:
     return transformed_weather_data
 
 @log_decorator
-def database_connection():
-    return psycopg2.connect(
-        host=DB_HOST,
-        database=DB_NAME,
-        user=DB_USER,
-        password=DB_PASS
-    )
+def init_bigquery_table():
+    '''Initialize BigQuery table if it does not exist'''
+    client = bigquery.Client(project=GCP_PROJECT)
 
-@log_decorator
-def init_database():
-    conn = None
+    table_ref = client.dataset(DATASET_ID).table(TABLE_ID)
+
     try:
-        conn = database_connection()
-        cur = conn.cursor()
+        client.get_table(table_ref)
+        print(f'Table {GCP_PROJECT}.{DATASET_ID}.{TABLE_ID} already exists.')
+    except Exception:
+        print(f'Table does not exist, creating it...')
 
-        with open('schema.sql', 'r') as f:
-            cur.execute(f.read())
+        schema = [
+            bigquery.SchemaField("timestamp", "TIMESTAMP"),
+            bigquery.SchemaField("city", "STRING"),
+            bigquery.SchemaField("temperature", "NUMERIC"),
+            bigquery.SchemaField("feels_like_temp", "NUMERIC"),
+            bigquery.SchemaField("humidity", "NUMERIC"),
+            bigquery.SchemaField("wind_speed", "NUMERIC"),
+            bigquery.SchemaField("description", "STRING"),
+            bigquery.SchemaField("icon_url", "STRING"),
+            bigquery.SchemaField("longitude", "NUMERIC"),
+            bigquery.SchemaField("latitude", "NUMERIC"),
+            bigquery.SchemaField("created_at", "TIMESTAMP", default_value_expression="CURRENT_TIMESTAMP()"),
+        ]
 
-        conn.commit()
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as e:
-        print(f'Error while initializing database: {e}')
-    finally:
-        if conn is not None:
-            conn.close()   
+        table = bigquery.Table(table_ref, schema=schema)
+        table = client.create_table(table)
+        print(f"Created table {table.project}.{table.dataset_id}.{table.table_id}")  
 
 @log_decorator
-def load_weather_data_on_database(data: dict):
+def load_weather_data_to_bigquery(data: dict):
     '''
-    Load the transformed weather data into the
-    connected database
+    Load the transformed weather data into BigQuery
+    '''
+    if not data:
+        print('No data to load')
     
-    Parameters:
-    data (dict): Transformed weather data
-	'''
-    sql_insert_query = """
-        INSERT INTO weather_capitals
-        (timestamp, city, temperature, feels_like_temp, humidity, wind_speed,
-        description, icon_url, longitude, latitude)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    """
-    conn = None
+    client = bigquery.Client(project=GCP_PROJECT)
+    table_id = f'{GCP_PROJECT}.{DATASET_ID}.{TABLE_ID}'
+
+    rows_to_insert = [data]
+
     try:
-        conn = database_connection()
-        cur = conn.cursor()
-        cur.execute(sql_insert_query, (
-            data['timestamp'],
-            data['city'],
-            data['temperature'],
-            data['feels_like_temp'],
-            data['humidity'],
-            data['wind_speed'],
-            data['description'],
-            data['icon_url'],
-            data['longitude'],
-            data['latitude']
-        ))
-        conn.commit()
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as e:
-        print(f'Error while inserting data: {e}')
-    finally:
-        if conn is not None:
-            conn.close()
+        errors = client.insert_rows_json(table_id, rows_to_insert)
+
+        if errors:
+            print(f'BigQuery insert errors: {errors}')
+        else:
+            print(f'Sucessfully inserted data for {data["city"]}')
+    except Exception as e:
+        print(f'Error while inserting data to BigQuery: {e}')
+
+@log_decorator
+def test_bigquery_connection():
+    '''Test BigQuery connection and permissions'''
+    try: 
+        client = bigquery.Client(project=GCP_PROJECT)
+
+        query = f'''
+        SELECT COUNT(*) AS row_count
+        FROM `{GCP_PROJECT}.{DATASET_ID}.{TABLE_ID}`
+        LIMIT 1
+        '''
+
+        query_job = client.query(query)
+        results = query_job.result()
+
+        for row in results:
+            print(f'BigQuery connection successful! Table has {row.row_count} rows')
+
+    except Exception as e:
+        print(f'BigQuery connection failed: {e}')
 
 
 if __name__ == '__main__':
-    database_connection()
-    pass
+    test_bigquery_connection()

@@ -1,24 +1,19 @@
-[tool.poetry]
-name = "weather-data-etl-pipeline"
+[project]
+name = "weather-data-etl"
 version = "0.1.0"
-description = ""
-authors = ["sch-paulo <pschmitzjr@gmail.com>"]
+description = "Add your description here"
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.12"
-numpy = "^2.2.1"
-pandas = "^2.2.3"
-python-dotenv = "^1.0.1"
-psycopg2-binary = "^2.9.9"
-loguru = "^0.7.3"
-requests = "^2.32.3"
-streamlit = "^1.42.0"
-plotly = "^6.0.0"
-folium = "^0.19.4"
-streamlit-folium = "^0.24.0"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires-python = ">=3.12"
+dependencies = [
+    "folium>=0.20.0",
+    "google-cloud-bigquery>=3.34.0",
+    "loguru>=0.7.3",
+    "numpy>=2.3.1",
+    "pandas>=2.3.0",
+    "plotly>=6.2.0",
+    "psycopg2-binary>=2.9.10",
+    "python-dotenv>=1.1.1",
+    "requests>=2.32.4",
+    "streamlit>=1.46.1",
+    "streamlit-folium>=0.25.0",
+]

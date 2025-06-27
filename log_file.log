@@ -1,0 +1,100 @@
+2025-06-25T21:17:24.990097-0400 INFO Chamando função 'extract_city_weather_data' com args ('Belém', 'bc531a3264637b5d6b6b8720d26cd3e0') e kwargs {} utils_log.py
+2025-06-25T21:17:25.527525-0400 INFO Função 'extract_city_weather_data' retornou {'coord': {'lon': -48.5044, 'lat': -1.4558}, 'weather': [{'id': 802, 'main': 'Clouds', 'description': 'scattered clouds', 'icon': '03n'}], 'base': 'stations', 'main': {'temp': 298.17, 'feels_like': 299.18, 'temp_min': 298.17, 'temp_max': 298.17, 'pressure': 1013, 'humidity': 94, 'sea_level': 1013, 'grnd_level': 1012}, 'visibility': 10000, 'wind': {'speed': 2.06, 'deg': 50}, 'clouds': {'all': 40}, 'dt': 1750900452, 'sys': {'type': 1, 'id': 8321, 'country': 'BR', 'sunrise': 1750842931, 'sunset': 1750886263}, 'timezone': -10800, 'id': 3405870, 'name': 'Belém', 'cod': 200} utils_log.py
+2025-06-27T10:43:49.507386-0400 INFO Chamando função 'test_bigquery_connection' com args () e kwargs {} utils_log.py
+2025-06-27T10:43:54.424415-0400 INFO Função 'test_bigquery_connection' retornou None utils_log.py
+2025-06-27T10:48:43.502366-0400 INFO Chamando função 'run_pipeline' com args ('São Paulo',) e kwargs {} utils_log.py
+2025-06-27T10:48:43.503371-0400 INFO Chamando função 'init_bigquery_table' com args () e kwargs {} utils_log.py
+2025-06-27T10:48:45.139692-0400 INFO Função 'init_bigquery_table' retornou None utils_log.py
+2025-06-27T10:48:45.139692-0400 INFO Chamando função 'extract_city_weather_data' com args ('São Paulo', 'bc531a3264637b5d6b6b8720d26cd3e0') e kwargs {} utils_log.py
+2025-06-27T10:48:45.663871-0400 INFO Função 'extract_city_weather_data' retornou {'coord': {'lon': -46.6361, 'lat': -23.5475}, 'weather': [{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '01d'}], 'base': 'stations', 'main': {'temp': 22.66, 'feels_like': 23.04, 'temp_min': 20.2, 'temp_max': 24.49, 'pressure': 1021, 'humidity': 79, 'sea_level': 1021, 'grnd_level': 931}, 'visibility': 10000, 'wind': {'speed': 1.54, 'deg': 310}, 'clouds': {'all': 0}, 'dt': 1751035178, 'sys': {'type': 2, 'id': 2082654, 'country': 'BR', 'sunrise': 1751017729, 'sunset': 1751056215}, 'timezone': -10800, 'id': 3448439, 'name': 'São Paulo', 'cod': 200} utils_log.py
+2025-06-27T10:48:45.664878-0400 INFO Chamando função 'transform_city_weather_data' com args ({'coord': {'lon': -46.6361, 'lat': -23.5475}, 'weather': [{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '01d'}], 'base': 'stations', 'main': {'temp': 22.66, 'feels_like': 23.04, 'temp_min': 20.2, 'temp_max': 24.49, 'pressure': 1021, 'humidity': 79, 'sea_level': 1021, 'grnd_level': 931}, 'visibility': 10000, 'wind': {'speed': 1.54, 'deg': 310}, 'clouds': {'all': 0}, 'dt': 1751035178, 'sys': {'type': 2, 'id': 2082654, 'country': 'BR', 'sunrise': 1751017729, 'sunset': 1751056215}, 'timezone': -10800, 'id': 3448439, 'name': 'São Paulo', 'cod': 200},) e kwargs {} utils_log.py
+2025-06-27T10:48:45.664878-0400 ERROR Exceção capturada em 'transform_city_weather_data': bad operand type for unary +: 'str' utils_log.py
+Traceback (most recent call last):
+
+  File "C:\Users\pschm\OneDrive\eng\projetos\weather_data_etl\src\main.py", line 54, in <module>
+    run_pipeline(city)
+    │            └ 'São Paulo'
+    └ <function run_pipeline at 0x0000025DFFE86200>
+
+  File "C:\Users\pschm\OneDrive\eng\projetos\weather_data_etl\src\utils_log.py", line 27, in wrapper
+    result = func(*args, **kwargs)
+             │     │       └ {}
+             │     └ ('São Paulo',)
+             └ <function run_pipeline at 0x0000025DE40AA3E0>
+
+  File "C:\Users\pschm\OneDrive\eng\projetos\weather_data_etl\src\main.py", line 24, in run_pipeline
+    transformed_data = transform_city_weather_data(weather_data)
+                       │                           └ {'coord': {'lon': -46.6361, 'lat': -23.5475}, 'weather': [{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '0...
+                       └ <function transform_city_weather_data at 0x0000025DFFE85DA0>
+
+> File "C:\Users\pschm\OneDrive\eng\projetos\weather_data_etl\src\utils_log.py", line 27, in wrapper
+    result = func(*args, **kwargs)
+             │     │       └ {}
+             │     └ ({'coord': {'lon': -46.6361, 'lat': -23.5475}, 'weather': [{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '...
+             └ <function transform_city_weather_data at 0x0000025DFFE85D00>
+
+  File "C:\Users\pschm\OneDrive\eng\projetos\weather_data_etl\src\pipeline.py", line 61, in transform_city_weather_data
+    transformed_weather_data = {+
+
+TypeError: bad operand type for unary +: 'str'
+2025-06-27T10:48:45.666382-0400 ERROR Exceção capturada em 'run_pipeline': bad operand type for unary +: 'str' utils_log.py
+Traceback (most recent call last):
+
+  File "C:\Users\pschm\OneDrive\eng\projetos\weather_data_etl\src\main.py", line 54, in <module>
+    run_pipeline(city)
+    │            └ 'São Paulo'
+    └ <function run_pipeline at 0x0000025DFFE86200>
+
+> File "C:\Users\pschm\OneDrive\eng\projetos\weather_data_etl\src\utils_log.py", line 27, in wrapper
+    result = func(*args, **kwargs)
+             │     │       └ {}
+             │     └ ('São Paulo',)
+             └ <function run_pipeline at 0x0000025DE40AA3E0>
+
+  File "C:\Users\pschm\OneDrive\eng\projetos\weather_data_etl\src\main.py", line 24, in run_pipeline
+    transformed_data = transform_city_weather_data(weather_data)
+                       │                           └ {'coord': {'lon': -46.6361, 'lat': -23.5475}, 'weather': [{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '0...
+                       └ <function transform_city_weather_data at 0x0000025DFFE85DA0>
+
+  File "C:\Users\pschm\OneDrive\eng\projetos\weather_data_etl\src\utils_log.py", line 27, in wrapper
+    result = func(*args, **kwargs)
+             │     │       └ {}
+             │     └ ({'coord': {'lon': -46.6361, 'lat': -23.5475}, 'weather': [{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '...
+             └ <function transform_city_weather_data at 0x0000025DFFE85D00>
+
+  File "C:\Users\pschm\OneDrive\eng\projetos\weather_data_etl\src\pipeline.py", line 61, in transform_city_weather_data
+    transformed_weather_data = {+
+
+TypeError: bad operand type for unary +: 'str'
+2025-06-27T10:51:05.682644-0400 INFO Chamando função 'run_pipeline' com args ('São Paulo',) e kwargs {} utils_log.py
+2025-06-27T10:51:05.682644-0400 INFO Chamando função 'init_bigquery_table' com args () e kwargs {} utils_log.py
+2025-06-27T10:51:07.571431-0400 INFO Função 'init_bigquery_table' retornou None utils_log.py
+2025-06-27T10:51:07.571431-0400 INFO Chamando função 'extract_city_weather_data' com args ('São Paulo', 'bc531a3264637b5d6b6b8720d26cd3e0') e kwargs {} utils_log.py
+2025-06-27T10:51:08.095393-0400 INFO Função 'extract_city_weather_data' retornou {'coord': {'lon': -46.6361, 'lat': -23.5475}, 'weather': [{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '01d'}], 'base': 'stations', 'main': {'temp': 21.5, 'feels_like': 21.95, 'temp_min': 20.2, 'temp_max': 24.14, 'pressure': 1021, 'humidity': 86, 'sea_level': 1021, 'grnd_level': 931}, 'visibility': 10000, 'wind': {'speed': 1.54, 'deg': 310}, 'clouds': {'all': 0}, 'dt': 1751035061, 'sys': {'type': 2, 'id': 2033898, 'country': 'BR', 'sunrise': 1751017729, 'sunset': 1751056215}, 'timezone': -10800, 'id': 3448439, 'name': 'São Paulo', 'cod': 200} utils_log.py
+2025-06-27T10:51:08.096381-0400 INFO Chamando função 'transform_city_weather_data' com args ({'coord': {'lon': -46.6361, 'lat': -23.5475}, 'weather': [{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '01d'}], 'base': 'stations', 'main': {'temp': 21.5, 'feels_like': 21.95, 'temp_min': 20.2, 'temp_max': 24.14, 'pressure': 1021, 'humidity': 86, 'sea_level': 1021, 'grnd_level': 931}, 'visibility': 10000, 'wind': {'speed': 1.54, 'deg': 310}, 'clouds': {'all': 0}, 'dt': 1751035061, 'sys': {'type': 2, 'id': 2033898, 'country': 'BR', 'sunrise': 1751017729, 'sunset': 1751056215}, 'timezone': -10800, 'id': 3448439, 'name': 'São Paulo', 'cod': 200},) e kwargs {} utils_log.py
+2025-06-27T10:51:08.096381-0400 INFO Função 'transform_city_weather_data' retornou {'timestamp': '2025-06-27T10:37:41', 'city': 'São Paulo', 'temperature': 21.5, 'feels_like_temp': 21.95, 'humidity': 86, 'wind_speed': 1.54, 'description': 'clear sky', 'icon_url': 'https://openweathermap.org/img/wn/01d@2x.png', 'longitude': -46.6361, 'latitude': -23.5475} utils_log.py
+2025-06-27T10:51:08.096381-0400 INFO Chamando função 'load_weather_data_to_bigquery' com args ({'timestamp': '2025-06-27T10:37:41', 'city': 'São Paulo', 'temperature': 21.5, 'feels_like_temp': 21.95, 'humidity': 86, 'wind_speed': 1.54, 'description': 'clear sky', 'icon_url': 'https://openweathermap.org/img/wn/01d@2x.png', 'longitude': -46.6361, 'latitude': -23.5475},) e kwargs {} utils_log.py
+2025-06-27T10:51:10.280089-0400 INFO Função 'load_weather_data_to_bigquery' retornou None utils_log.py
+2025-06-27T10:51:10.280089-0400 INFO Função 'run_pipeline' retornou None utils_log.py
+2025-06-27T10:51:12.281126-0400 INFO Chamando função 'run_pipeline' com args ('Rio de Janeiro',) e kwargs {} utils_log.py
+2025-06-27T10:51:12.281126-0400 INFO Chamando função 'init_bigquery_table' com args () e kwargs {} utils_log.py
+2025-06-27T10:51:13.797129-0400 INFO Função 'init_bigquery_table' retornou None utils_log.py
+2025-06-27T10:51:13.797129-0400 INFO Chamando função 'extract_city_weather_data' com args ('Rio de Janeiro', 'bc531a3264637b5d6b6b8720d26cd3e0') e kwargs {} utils_log.py
+2025-06-27T10:51:14.256523-0400 INFO Função 'extract_city_weather_data' retornou {'coord': {'lon': -43.2075, 'lat': -22.9028}, 'weather': [{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '01d'}], 'base': 'stations', 'main': {'temp': 27.9, 'feels_like': 28.34, 'temp_min': 27.12, 'temp_max': 28.97, 'pressure': 1020, 'humidity': 50, 'sea_level': 1020, 'grnd_level': 1021}, 'visibility': 10000, 'wind': {'speed': 4.12, 'deg': 240}, 'clouds': {'all': 0}, 'dt': 1751035110, 'sys': {'type': 2, 'id': 2098644, 'country': 'BR', 'sunrise': 1751016827, 'sunset': 1751055471}, 'timezone': -10800, 'id': 3451190, 'name': 'Rio de Janeiro', 'cod': 200} utils_log.py
+2025-06-27T10:51:14.256523-0400 INFO Chamando função 'transform_city_weather_data' com args ({'coord': {'lon': -43.2075, 'lat': -22.9028}, 'weather': [{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '01d'}], 'base': 'stations', 'main': {'temp': 27.9, 'feels_like': 28.34, 'temp_min': 27.12, 'temp_max': 28.97, 'pressure': 1020, 'humidity': 50, 'sea_level': 1020, 'grnd_level': 1021}, 'visibility': 10000, 'wind': {'speed': 4.12, 'deg': 240}, 'clouds': {'all': 0}, 'dt': 1751035110, 'sys': {'type': 2, 'id': 2098644, 'country': 'BR', 'sunrise': 1751016827, 'sunset': 1751055471}, 'timezone': -10800, 'id': 3451190, 'name': 'Rio de Janeiro', 'cod': 200},) e kwargs {} utils_log.py
+2025-06-27T10:51:14.257528-0400 INFO Função 'transform_city_weather_data' retornou {'timestamp': '2025-06-27T10:38:30', 'city': 'Rio de Janeiro', 'temperature': 27.9, 'feels_like_temp': 28.34, 'humidity': 50, 'wind_speed': 4.12, 'description': 'clear sky', 'icon_url': 'https://openweathermap.org/img/wn/01d@2x.png', 'longitude': -43.2075, 'latitude': -22.9028} utils_log.py
+2025-06-27T10:51:14.257528-0400 INFO Chamando função 'load_weather_data_to_bigquery' com args ({'timestamp': '2025-06-27T10:38:30', 'city': 'Rio de Janeiro', 'temperature': 27.9, 'feels_like_temp': 28.34, 'humidity': 50, 'wind_speed': 4.12, 'description': 'clear sky', 'icon_url': 'https://openweathermap.org/img/wn/01d@2x.png', 'longitude': -43.2075, 'latitude': -22.9028},) e kwargs {} utils_log.py
+2025-06-27T10:51:15.726350-0400 INFO Função 'load_weather_data_to_bigquery' retornou None utils_log.py
+2025-06-27T10:51:15.726350-0400 INFO Função 'run_pipeline' retornou None utils_log.py
+2025-06-27T10:51:17.727743-0400 INFO Chamando função 'run_pipeline' com args ('Brasília',) e kwargs {} utils_log.py
+2025-06-27T10:51:17.727743-0400 INFO Chamando função 'init_bigquery_table' com args () e kwargs {} utils_log.py
+2025-06-27T10:51:19.351092-0400 INFO Função 'init_bigquery_table' retornou None utils_log.py
+2025-06-27T10:51:19.351092-0400 INFO Chamando função 'extract_city_weather_data' com args ('Brasília', 'bc531a3264637b5d6b6b8720d26cd3e0') e kwargs {} utils_log.py
+2025-06-27T10:51:19.807628-0400 INFO Função 'extract_city_weather_data' retornou {'coord': {'lon': -47.9297, 'lat': -15.7797}, 'weather': [{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '01d'}], 'base': 'stations', 'main': {'temp': 22.51, 'feels_like': 22.38, 'temp_min': 22.51, 'temp_max': 24.48, 'pressure': 1021, 'humidity': 60, 'sea_level': 1021, 'grnd_level': 894}, 'visibility': 10000, 'wind': {'speed': 3.09, 'deg': 110}, 'clouds': {'all': 0}, 'dt': 1751035783, 'sys': {'type': 1, 'id': 8336, 'country': 'BR', 'sunrise': 1751017134, 'sunset': 1751057431}, 'timezone': -10800, 'id': 3469058, 'name': 'Brasília', 'cod': 200} utils_log.py
+2025-06-27T10:51:19.807628-0400 INFO Chamando função 'transform_city_weather_data' com args ({'coord': {'lon': -47.9297, 'lat': -15.7797}, 'weather': [{'id': 800, 'main': 'Clear', 'description': 'clear sky', 'icon': '01d'}], 'base': 'stations', 'main': {'temp': 22.51, 'feels_like': 22.38, 'temp_min': 22.51, 'temp_max': 24.48, 'pressure': 1021, 'humidity': 60, 'sea_level': 1021, 'grnd_level': 894}, 'visibility': 10000, 'wind': {'speed': 3.09, 'deg': 110}, 'clouds': {'all': 0}, 'dt': 1751035783, 'sys': {'type': 1, 'id': 8336, 'country': 'BR', 'sunrise': 1751017134, 'sunset': 1751057431}, 'timezone': -10800, 'id': 3469058, 'name': 'Brasília', 'cod': 200},) e kwargs {} utils_log.py
+2025-06-27T10:51:19.807628-0400 INFO Função 'transform_city_weather_data' retornou {'timestamp': '2025-06-27T10:49:43', 'city': 'Brasília', 'temperature': 22.51, 'feels_like_temp': 22.38, 'humidity': 60, 'wind_speed': 3.09, 'description': 'clear sky', 'icon_url': 'https://openweathermap.org/img/wn/01d@2x.png', 'longitude': -47.9297, 'latitude': -15.7797} utils_log.py
+2025-06-27T10:51:19.807628-0400 INFO Chamando função 'load_weather_data_to_bigquery' com args ({'timestamp': '2025-06-27T10:49:43', 'city': 'Brasília', 'temperature': 22.51, 'feels_like_temp': 22.38, 'humidity': 60, 'wind_speed': 3.09, 'description': 'clear sky', 'icon_url': 'https://openweathermap.org/img/wn/01d@2x.png', 'longitude': -47.9297, 'latitude': -15.7797},) e kwargs {} utils_log.py
+2025-06-27T10:51:21.356282-0400 INFO Função 'load_weather_data_to_bigquery' retornou None utils_log.py
+2025-06-27T10:51:21.357283-0400 INFO Função 'run_pipeline' retornou None utils_log.py
+2025-06-27T10:53:53.878010-0400 INFO Chamando função 'test_bigquery_connection' com args () e kwargs {} utils_log.py
+2025-06-27T10:53:56.854996-0400 INFO Função 'test_bigquery_connection' retornou None utils_log.py
